@@ -3,12 +3,31 @@ import Logo from "/weblogo.png";
 import { NavLink } from "react-router-dom";
 
 const Footer = () => {
+  const footerLinks = [
+    { name: "Home", path: "/home" },
+    { name: "About Us", path: "/about" },
+    { name: "Contact Us", path: "/contact" },
+    { name: "Cart", path: "/cart" },
+  ];
+
+  const contactDetails = [
+    { icon: "📞", text: "+91-72498-32504" },
+    { icon: "📧", text: "support@triftopia.com" },
+  ];
+
+  const FooterSection = ({ title, children }) => (
+    <div className="text-center sm:text-left">
+      <p className="text-lg font-semibold mb-3">{title}</p>
+      {children}
+    </div>
+  );
+
   return (
-    <footer className=" py-10 px-5">
+    <footer className="py-10 px-5">
       {/* Main Footer Section */}
       <div className="flex flex-col sm:grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-14 items-center sm:items-start my-10">
         {/* Logo & Description */}
-        <div className="text-center sm:text-left">
+        <FooterSection>
           <img
             src={Logo}
             alt="Triftopia Logo"
@@ -19,43 +38,31 @@ const Footer = () => {
             and limited-edition treasures. From collectibles to unique fashion
             pieces, explore a world of exclusivity with us.
           </p>
-        </div>
+        </FooterSection>
 
         {/* Company Links */}
-        <div className="text-center sm:text-left">
-          <p className="text-lg font-semibold mb-3">COMPANY</p>
+        <FooterSection title="COMPANY">
           <ul className="flex flex-col gap-1 text-gray-600 text-sm">
-            <li>
-              <NavLink to="/home" className="hover:text-gray-900">
-                Home
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/about" className="hover:text-gray-900">
-                About Us
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/contact" className="hover:text-gray-900">
-                Contact us
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/cart" className="hover:text-gray-900">
-                Cart
-              </NavLink>
-            </li>
+            {footerLinks.map(({ name, path }) => (
+              <li key={name}>
+                <NavLink to={path} className="hover:text-gray-900">
+                  {name}
+                </NavLink>
+              </li>
+            ))}
           </ul>
-        </div>
+        </FooterSection>
 
         {/* Contact Details */}
-        <div className="text-center sm:text-left">
-          <p className="text-lg font-semibold mb-3">GET IN TOUCH</p>
+        <FooterSection title="GET IN TOUCH">
           <ul className="flex flex-col gap-1 text-gray-600 text-sm">
-            <li className="hover:text-gray-900">📞 +91-72498-32504</li>
-            <li className="hover:text-gray-900">📧 support@triftopia.com</li>
+            {contactDetails.map(({ icon, text }, index) => (
+              <li key={index} className="hover:text-gray-900">
+                {icon} {text}
+              </li>
+            ))}
           </ul>
-        </div>
+        </FooterSection>
       </div>
 
       {/* Bottom Section */}

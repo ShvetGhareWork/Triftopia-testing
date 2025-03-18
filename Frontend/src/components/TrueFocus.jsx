@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 import "../TrueFocus.css";
 
 const TrueFocus = ({
@@ -13,7 +14,6 @@ const TrueFocus = ({
 }) => {
   const words = sentence.split(" ");
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [lastActiveIndex, setLastActiveIndex] = useState(null);
   const containerRef = useRef(null);
   const wordRefs = useRef([]);
   const [focusRect, setFocusRect] = useState({
@@ -23,19 +23,19 @@ const TrueFocus = ({
     height: 0,
   });
 
+  // Automatic animation (non-manual mode)
   useEffect(() => {
-    if (!manualMode) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % words.length);
-      }, (animationDuration + pauseBetweenAnimations) * 1000);
+    if (manualMode) return;
 
-      return () => clearInterval(interval);
-    }
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % words.length);
+    }, (animationDuration + pauseBetweenAnimations) * 1000);
+
+    return () => clearInterval(interval);
   }, [manualMode, animationDuration, pauseBetweenAnimations, words.length]);
 
+  // Focus rectangle positioning
   useEffect(() => {
-    if (currentIndex === null || currentIndex === -1) return;
-
     if (!wordRefs.current[currentIndex] || !containerRef.current) return;
 
     const parentRect = containerRef.current.getBoundingClientRect();
@@ -49,50 +49,29 @@ const TrueFocus = ({
     });
   }, [currentIndex, words.length]);
 
-  // Handlers for manual mode (hover)
-  const handleMouseEnter = (index) => {
-    if (manualMode) {
-      setLastActiveIndex(index);
-      setCurrentIndex(index);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (manualMode) {
-      setCurrentIndex(lastActiveIndex);
-    }
-  };
+  const handleMouseEnter = (index) => manualMode && setCurrentIndex(index);
 
   return (
     <div className="focus-container" ref={containerRef}>
-      {words.map((word, index) => {
-        const isActive = index === currentIndex;
-        return (
-          <span
-            key={index}
-            ref={(el) => (wordRefs.current[index] = el)}
-            className={`focus-word ${manualMode ? "manual" : ""} ${
-              isActive && !manualMode ? "active" : ""
-            }`}
-            style={{
-              filter: manualMode
-                ? isActive
-                  ? `blur(0px)`
-                  : `blur(${blurAmount}px)`
-                : isActive
-                ? `blur(0px)`
-                : `blur(${blurAmount}px)`,
-              "--border-color": borderColor,
-              "--glow-color": glowColor,
-              transition: `filter ${animationDuration}s ease`,
-            }}
-            onMouseEnter={() => handleMouseEnter(index)}
-            onMouseLeave={handleMouseLeave}
-          >
-            {word}
-          </span>
-        );
-      })}
+      {words.map((word, index) => (
+        <span
+          key={index}
+          ref={(el) => (wordRefs.current[index] = el)}
+          className={`focus-word ${manualMode ? "manual" : ""} ${
+            index === currentIndex ? "active" : ""
+          }`}
+          style={{
+            filter:
+              index === currentIndex ? "blur(0px)" : `blur(${blurAmount}px)`,
+            "--border-color": borderColor,
+            "--glow-color": glowColor,
+            transition: `filter ${animationDuration}s ease`,
+          }}
+          onMouseEnter={() => handleMouseEnter(index)}
+        >
+          {word}
+        </span>
+      ))}
 
       <motion.div
         className="focus-frame"
@@ -103,9 +82,7 @@ const TrueFocus = ({
           height: focusRect.height,
           opacity: currentIndex >= 0 ? 1 : 0,
         }}
-        transition={{
-          duration: animationDuration,
-        }}
+        transition={{ duration: animationDuration }}
         style={{
           "--border-color": borderColor,
           "--glow-color": glowColor,
@@ -118,6 +95,17 @@ const TrueFocus = ({
       </motion.div>
     </div>
   );
+};
+
+// Prop Types Validation
+TrueFocus.propTypes = {
+  sentence: PropTypes.string,
+  manualMode: PropTypes.bool,
+  blurAmount: PropTypes.number,
+  borderColor: PropTypes.string,
+  glowColor: PropTypes.string,
+  animationDuration: PropTypes.number,
+  pauseBetweenAnimations: PropTypes.number,
 };
 
 export default TrueFocus;

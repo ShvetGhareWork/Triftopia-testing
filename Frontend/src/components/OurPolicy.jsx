@@ -1,46 +1,42 @@
-import { useState, useEffect } from "react";
-import Title from "./Title"; // Ensure the Title component exists
-import Refund from "/arrow-left-right.svg"; // Adjust the path as needed
+import { useState, useEffect, useRef } from "react";
+import Title from "./Title";
+import Refund from "/arrow-left-right.svg";
 import Call from "/contact.svg";
 import Trust from "/book-open-check.svg";
 
+const policies = [
+  {
+    img: Refund,
+    title: "Easy Exchange Policy",
+    desc: "Hassle-free exchanges for a smooth shopping experience. We make returns easy and fast!",
+  },
+  {
+    img: Call,
+    title: "24/7 Customer Support",
+    desc: "Our support team is available round-the-clock to assist you with any questions or concerns.",
+  },
+  {
+    img: Trust,
+    title: "100% Best Materials",
+    desc: "We use only the highest quality materials to ensure your satisfaction and long-lasting products.",
+  },
+];
+
 const OurPolicy = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect(); // Stop observing after it becomes visible
-        }
-      },
+      ([entry]) => entry.isIntersecting && setIsVisible(true),
       { threshold: 0.2 }
     );
 
-    const section = document.getElementById("policy-section");
-    if (section) observer.observe(section);
+    const currentSection = sectionRef.current;
+    if (currentSection) observer.observe(currentSection);
 
-    return () => observer.disconnect();
+    return () => currentSection && observer.unobserve(currentSection);
   }, []);
-
-  const policies = [
-    {
-      img: Refund,
-      title: "Easy Exchange Policy",
-      desc: "Hassle-free exchanges for a smooth shopping experience. We make returns easy and fast!",
-    },
-    {
-      img: Call,
-      title: "24/7 Customer Support",
-      desc: "Our support team is available round-the-clock to assist you with any questions or concerns.",
-    },
-    {
-      img: Trust,
-      title: "100% Best Materials",
-      desc: "We use only the highest quality materials to ensure your satisfaction and long-lasting products.",
-    },
-  ];
 
   return (
     <div className="my-10">
@@ -55,20 +51,16 @@ const OurPolicy = () => {
 
       {/* Policy Section */}
       <div
-        id="policy-section"
+        ref={sectionRef}
         className={`flex flex-col sm:flex-row justify-center items-center gap-12 sm:gap-8 text-center py-20 transition-all duration-700 ease-in-out ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`}
       >
-        {policies.map((item, index) => (
-          <div key={index} className="w-80">
-            <img
-              src={item.img}
-              className="w-16 mx-auto mb-5"
-              alt={item.title}
-            />
-            <p className="font-semibold text-lg">{item.title}</p>
-            <p className="text-gray-500">{item.desc}</p>
+        {policies.map(({ img, title, desc }) => (
+          <div key={title} className="w-80">
+            <img src={img} className="w-16 mx-auto mb-5" alt={title} />
+            <p className="font-semibold text-lg">{title}</p>
+            <p className="text-gray-500">{desc}</p>
           </div>
         ))}
       </div>

@@ -9,39 +9,40 @@ import Footer from "../components/Footer.jsx";
 const Cart = () => {
   const { currency, CartItems, removeFromCart, updateQuantity, navigate } =
     useContext(ShopContext);
-  const [cartdata, setCartdata] = useState([]);
+  const [cartData, setCartData] = useState([]);
 
   useEffect(() => {
     const tempData = Object.entries(CartItems).map(([itemId, item]) => ({
       _id: itemId,
       quantity: item.quantity,
       name: item.name || "Unknown Product",
-      image: item.image || "/default-image.png", // Provide a default image
+      image: item.image || "/default-image.png",
       price: item.price || 0,
     }));
-
-    setCartdata(tempData);
+    setCartData(tempData);
   }, [CartItems]);
 
-  const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleString();
+  const currentDate = new Date().toLocaleString();
 
   return (
     <>
       <Navbar />
       <div className="pt-10">
         <div className="text-2xl mb-3 text-center">
-          <Title text1={"YOUR"} text2={"CART"} />
+          <Title text1="YOUR" text2="CART" />
         </div>
+
+        {/* Cart Items */}
         <div>
-          {cartdata.length === 0 ? (
-            <div className="text-center"></div>
+          {cartData.length === 0 ? (
+            <div className="text-center">Your cart is empty.</div>
           ) : (
-            cartdata.map((item, index) => (
+            cartData.map((item) => (
               <div
-                key={index}
-                className="py-4 border-t border-b-0 text-gray-700 grid-cols-[4fr_0.5fr0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] gap-4 flex justify-between items-center"
+                key={item._id}
+                className="py-4 border-t border-b-0 text-gray-700 flex justify-between items-center"
               >
+                {/* Product Details */}
                 <div className="flex items-start gap-6">
                   <img
                     src={item.image}
@@ -49,17 +50,14 @@ const Cart = () => {
                     alt={item.name}
                   />
                   <div>
-                    <p className="text-xl sm:text-2xl font-bold">
-                      <b>{item.name}</b>
-                    </p>
-                    <div className="flex items-center w-100 justify-between">
+                    <p className="text-xl sm:text-2xl font-bold">{item.name}</p>
+                    <div className="flex items-center justify-between space-x-4">
                       <p className="text-lg font-semibold sm:text-md">
                         Price: {currency}
                         {new Intl.NumberFormat().format(item.price)}
-                        {"    "}
                       </p>
                       <p className="text-lg font-semibold sm:text-md">
-                        Time: {formattedDate}
+                        Time: {currentDate}
                       </p>
                     </div>
                     <div className="flex items-center">
@@ -67,39 +65,43 @@ const Cart = () => {
                         Quantity:
                       </p>
                       <input
+                        type="number"
+                        min={1}
+                        defaultValue={item.quantity}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "" || value === "0" || isNaN(value))
                             return;
                           updateQuantity(item._id, Number(value));
                         }}
-                        type="number"
-                        className="border-1 border-gray-400 w-52 h-10 max-w-10 sm:max-w-20 px-1 sm:px-2 py-1 sm:py-2"
-                        min={1}
-                        defaultValue={item.quantity}
+                        className="border border-gray-400 w-20 h-10 px-2"
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* Remove Button */}
                 <img
                   src={Bin}
                   className="w-auto mr-4 cursor-pointer"
-                  alt=""
+                  alt="Remove"
                   onClick={() => removeFromCart(item._id)}
                 />
               </div>
             ))
           )}
         </div>
-        <hr />
 
+        <hr className="my-6" />
+
+        {/* Cart Total and Checkout */}
         <div className="flex justify-end my-20">
           <div className="w-full sm:w-[450px]">
             <CartTotal />
-            <div className="w-full text-end ">
+            <div className="w-full text-end">
               <button
                 onClick={() => navigate("/place-order")}
-                className="bg-black mr-10 text-white text-sm my-8 px-8 py-3"
+                className="bg-black text-white text-sm my-8 px-8 py-3"
               >
                 PROCEED TO CHECKOUT
               </button>

@@ -1,5 +1,4 @@
-import { useCallback } from "react";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import { ShopContext } from "../context/ShopContext";
 import Title from "../components/Title.jsx";
@@ -8,126 +7,90 @@ import ProductItem from "../components/ProductItem.jsx";
 
 const AntiqueCollection = () => {
   const { products, Search, ShowSearch } = useContext(ShopContext);
-  const [ShowFilter, SetShowFilter] = useState(false);
-  const [Allproducts, SetAllproducts] = useState([]);
-  const [Category, SetCategory] = useState([]);
-  const [SubCategory, SetSubCategory] = useState([]);
-  const [sort_type, setsort_type] = useState("Relevant");
+  const [showFilter, setShowFilter] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [category, setCategory] = useState([]);
+  const [subCategory, setSubCategory] = useState([]);
+  const [sortType, setSortType] = useState("Relevant");
 
-  const toggleCategory = (e) => {
-    const value = e.target.value;
-    SetCategory((prev) =>
+  const antiques = products.filter((item) => item.category === "Antique");
+
+  const handleToggle = (value, setter) => {
+    setter((prev) =>
       prev.includes(value)
         ? prev.filter((item) => item !== value)
         : [...prev, value]
     );
   };
 
-  const toggleSubCategory = (e) => {
-    const value = e.target.value;
-    SetSubCategory((prev) =>
-      prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-    );
-  };
-
-  const Limited_products = products.filter(
-    (item) => item.category === "Antique"
-  );
-
-  useEffect(() => {
-    SetAllproducts(Limited_products);
-  }, [products]);
-
-  const ApplyFilter = useCallback(() => {
-    let filteredProducts = Limited_products.slice();
+  const applyFilter = useCallback(() => {
+    let filtered = antiques;
 
     if (Search) {
-      filteredProducts = filteredProducts.filter((item) =>
+      filtered = filtered.filter((item) =>
         item.name.toLowerCase().includes(Search.toLowerCase())
       );
     }
 
-    if (Category.length > 0) {
-      filteredProducts = filteredProducts.filter((item) =>
-        Category.includes(item.rarityLevel)
+    if (category.length > 0) {
+      filtered = filtered.filter((item) => category.includes(item.rarityLevel));
+    }
+
+    if (subCategory.length > 0) {
+      filtered = filtered.filter((item) =>
+        subCategory.some((sub) => item[sub] === true)
       );
     }
 
-    if (SubCategory.length > 0) {
-      filteredProducts = filteredProducts.filter((item) =>
-        SubCategory.some((sub) => item[sub] === true)
-      );
+    if (sortType === "Low-High") {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortType === "High-Low") {
+      filtered.sort((a, b) => b.price - a.price);
     }
 
-    switch (sort_type) {
-      case "Low-High":
-        filteredProducts.sort((a, b) => a.price - b.price);
-        break;
-      case "High-Low":
-        filteredProducts.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        break;
-    }
-
-    SetAllproducts(filteredProducts);
-  }, [Category, SubCategory, sort_type, Search, products]);
+    setFilteredProducts(filtered);
+  }, [category, subCategory, sortType, Search, products]);
 
   useEffect(() => {
-    ApplyFilter();
-  }, [ApplyFilter, ShowSearch, Search]);
+    applyFilter();
+  }, [applyFilter, ShowSearch, Search]);
 
   return (
     <div>
       <Navbar />
       <div className="flex flex-col sm:flex-row gap-6 pt-10 px-4 sm:px-10">
+        {/* Sidebar Filters */}
         <div className="sm:w-1/4">
           <button
-            onClick={() => SetShowFilter(!ShowFilter)}
+            onClick={() => setShowFilter(!showFilter)}
             className="sm:hidden bg-gray-200 p-2 rounded-md w-full mb-4"
           >
             Toggle Filters
           </button>
           <div
             className={`${
-              ShowFilter ? "block" : "hidden"
+              showFilter ? "block" : "hidden"
             } sm:block border p-4 rounded-md`}
           >
-            <p className="text-lg font-semibold mb-3">CATEGORIES</p>
-            <div className="space-y-2">
-              {["Common", "Rare", "Ultra-Rare"].map((cat) => (
-                <label key={cat} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    value={cat}
-                    onChange={toggleCategory}
-                  />{" "}
-                  {cat}
-                </label>
-              ))}
-            </div>
-            <p className="text-lg font-semibold mt-4 mb-3">TYPE</p>
-            <div className="space-y-2">
-              {["bestseller", "trusted"].map((sub) => (
-                <label key={sub} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    value={sub}
-                    onChange={toggleSubCategory}
-                  />{" "}
-                  {sub.replace(/_/g, " ")}
-                </label>
-              ))}
-            </div>
+            <FilterSection
+              title="CATEGORIES"
+              options={["Common", "Rare", "Ultra-Rare"]}
+              onToggle={(value) => handleToggle(value, setCategory)}
+            />
+            <FilterSection
+              title="TYPE"
+              options={["bestseller", "trusted"]}
+              onToggle={(value) => handleToggle(value, setSubCategory)}
+            />
           </div>
         </div>
+
+        {/* Product List */}
         <div className="sm:w-3/4">
           <div className="flex justify-between items-center mb-4">
             <Title text1="ALL" text2="COLLECTIONS" />
             <select
-              onChange={(e) => setsort_type(e.target.value)}
+              onChange={(e) => setSortType(e.target.value)}
               className="border p-2 rounded-md"
             >
               <option value="Relevant">Sort by: Relevance</option>
@@ -135,8 +98,9 @@ const AntiqueCollection = () => {
               <option value="High-Low">Sort by: High to Low</option>
             </select>
           </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Allproducts.map((item) => (
+            {filteredProducts.map((item) => (
               <motion.div
                 key={item._id}
                 initial={{ opacity: 0, y: 50 }}
@@ -157,5 +121,24 @@ const AntiqueCollection = () => {
     </div>
   );
 };
+
+// Reusable Filter Component
+const FilterSection = ({ title, options, onToggle }) => (
+  <div>
+    <p className="text-lg font-semibold mb-3">{title}</p>
+    <div className="space-y-2">
+      {options.map((option) => (
+        <label key={option} className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            value={option}
+            onChange={(e) => onToggle(e.target.value)}
+          />{" "}
+          {option.replace(/_/g, " ")}
+        </label>
+      ))}
+    </div>
+  </div>
+);
 
 export default AntiqueCollection;

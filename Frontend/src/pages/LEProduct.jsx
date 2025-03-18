@@ -8,35 +8,37 @@ import RelatedProducts from "../components/RelatedProducts";
 const LEProduct = () => {
   const { products, currency, AddtoCart } = useContext(ShopContext);
   const { productId } = useParams();
-  const [ProductData, setProductData] = useState(null);
-  const [Image, SetImage] = useState("");
+  const [productData, setProductData] = useState(null);
 
-  // Fetch product data
-  const fetchdata = () => {
-    if (!products || products.length === 0) {
-      console.log("No products found in context.");
-      return;
-    }
-
-    const data = products.find((item) => item._id == productId);
-
-    if (!data) {
-      console.error(`Product with ID ${productId} not found.`);
-      return;
-    }
-
-    setProductData(data);
-    SetImage(data.image || ""); // Prevents undefined errors
-  };
-
-  // Run fetchdata only when products are available
   useEffect(() => {
     if (products.length > 0) {
-      fetchdata();
+      const data = products.find((item) => item._id === productId);
+      if (data) setProductData(data);
+      else console.error(`Product with ID ${productId} not found.`);
     }
   }, [products, productId]);
 
-  return ProductData ? (
+  if (!productData) {
+    return (
+      <div className="text-center py-10 text-gray-500">
+        Loading product details...
+      </div>
+    );
+  }
+
+  const {
+    name,
+    image,
+    price,
+    Emi,
+    description,
+    category,
+    subcategory,
+    condition,
+    rarity_level,
+  } = productData;
+
+  return (
     <>
       <Navbar />
       <div className="container px-4 py-8">
@@ -46,39 +48,34 @@ const LEProduct = () => {
             {/* Thumbnails */}
             <div className="flex flex-col gap-4">
               <button className="w-20 h-20 border rounded-lg overflow-hidden">
-                <img src={Image} alt="Product Thumbnail" />
+                <img src={image} alt="Product Thumbnail" />
               </button>
             </div>
             {/* Main Image */}
-            <div
-              className="flex-1 sticky top-0 z-10 hover:scale-110 hover:translate-x-10- transition duration-500"
-              style={{ top: "10px" }}
-            >
-              <img src={Image} className="rounded-lg" alt="Product" />
+            <div className="flex-1 sticky top-0 hover:scale-110 transition duration-500">
+              <img src={image} className="rounded-lg" alt="Product" />
             </div>
           </div>
 
           {/* Product Details */}
           <div className="flex flex-col gap-6 pl-10">
-            <h1 className="font-medium text-3xl mt-2 ">{ProductData.name}</h1>
+            <h1 className="font-medium text-3xl">{name}</h1>
             <div className="flex items-center gap-1 mt-2">
-              <img src={Star} alt="Star" className="w-3.5" />
-              <img src={Star} alt="Star" className="w-3.5" />
-              <img src={Star} alt="Star" className="w-3.5" />
-              <img src={Star} alt="Star" className="w-3.5" />
-              <img src={Star} alt="Star" className="w-3.5" />
+              {[...Array(5)].map((_, i) => (
+                <img key={i} src={Star} alt="Star" className="w-3.5" />
+              ))}
               <p className="text-gray-600 pl-2">(122)</p>
             </div>
             <p className="text-3xl font-semibold">
-              {currency} {ProductData.price}
+              {currency} {price}
             </p>
-            {ProductData.Emi && (
+            {Emi && (
               <p className="text-xl">
-                EMI: {currency} {ProductData.Emi} Valid up to 24 months!
+                EMI: {currency} {Emi} Valid up to 24 months!
               </p>
             )}
             <button
-              onClick={() => AddtoCart(ProductData._id)}
+              onClick={() => AddtoCart(productId)}
               className="bg-black w-40 text-white px-8 py-3 text-sm active:bg-gray-700"
             >
               ADD TO CART
@@ -99,25 +96,21 @@ const LEProduct = () => {
             <b className="border px-5 py-3 text-lg">REVIEWS (122)</b>
           </div>
           <div className="flex flex-col gap-4 border px-6 py-6 text-lg text-gray-500">
-            <p>{ProductData.description}</p>
+            <p>{description}</p>
           </div>
         </div>
-      </div>
 
-      {/* Related Products */}
-      <div className="w-full">
-        <RelatedProducts
-          category={ProductData.category}
-          subcategory={ProductData.subcategory}
-          condition={ProductData.condition}
-          rarity_level={ProductData.rarity_level}
-        />
+        {/* Related Products */}
+        <div className="w-full">
+          <RelatedProducts
+            category={category}
+            subcategory={subcategory}
+            condition={condition}
+            rarity_level={rarity_level}
+          />
+        </div>
       </div>
     </>
-  ) : (
-    <div className="text-center py-10 text-gray-500">
-      Loading product details...
-    </div>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { ShopContext } from "../context/ShopContext";
 import ProductItem from "./ProductItem";
 import { motion } from "framer-motion";
@@ -11,7 +12,7 @@ const RelatedProducts = ({
   condition,
 }) => {
   const { products } = useContext(ShopContext);
-  const [Related, SetRelated] = useState([]);
+  const [related, setRelated] = useState([]);
 
   const itemVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -23,28 +24,27 @@ const RelatedProducts = ({
   };
 
   useEffect(() => {
-    if (products.length > 0) {
-      let Productscopy = products.slice();
-      Productscopy = products.filter(
+    if (products.length) {
+      const filteredProducts = products.filter(
         (item) =>
-          category === item.category &&
-          subcategory === item.subcategory &&
-          condition === item.condition &&
-          rarity_level === item.rarity_level
+          item.category === category &&
+          item.subcategory === subcategory &&
+          item.condition === condition &&
+          item.rarity_level === rarity_level
       );
-      SetRelated(Productscopy);
+      setRelated(filteredProducts.slice(0, 5));
     }
   }, [category, subcategory, rarity_level, condition, products]);
 
   return (
     <>
       <div className="w-full text-center text-3xl py-2">
-        <Title text1={"RELATED"} text2={"PRODUCTS"} />
+        <Title text1="RELATED" text2="PRODUCTS" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
-        {Related.slice(0, 5).map((item, index) => (
+        {related.map((item) => (
           <motion.div
-            key={index}
+            key={item._id}
             variants={itemVariants}
             initial="hidden"
             whileInView="visible"
@@ -62,6 +62,14 @@ const RelatedProducts = ({
       <hr className="opacity-0 mt-10 mb-10" />
     </>
   );
+};
+
+// PropTypes validation
+RelatedProducts.propTypes = {
+  category: PropTypes.string.isRequired,
+  subcategory: PropTypes.string.isRequired,
+  rarity_level: PropTypes.string.isRequired,
+  condition: PropTypes.string.isRequired,
 };
 
 export default RelatedProducts;

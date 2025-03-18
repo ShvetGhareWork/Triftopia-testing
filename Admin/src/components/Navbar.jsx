@@ -1,17 +1,15 @@
 import React from "react";
-// import logo from "/adminlogo.png";
-const Navbar = ({ setToken }) => {
-  return (
-    <div className="flex items-center py-2 px-[4%] justify-between">
-      <img className="w-[200px]" src="" alt="" />
-      <button
-        onClick={() => setToken("")}
-        className="bg-gray-600 text-white px-5 py-2 sm:py-2 sm:px-7 rounded-full text-xs sm:text-sm"
-      >
-        LogOut
-      </button>
-    </div>
-  );
-};
+
+const Navbar = ({ setToken }) => (
+  <div className="flex items-center justify-between py-2 px-[4%]">
+    <img className="w-40 sm:w-52" src="" alt="Admin Logo" />
+    <button
+      onClick={() => setToken("")}
+      className="bg-gray-600 text-white px-5 py-2 rounded-full text-xs sm:text-sm transition hover:bg-gray-700"
+    >
+      Log Out
+    </button>
+  </div>
+);
 
 export default Navbar;

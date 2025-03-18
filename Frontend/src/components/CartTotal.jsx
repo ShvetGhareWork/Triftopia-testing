@@ -9,32 +9,37 @@ const CartTotal = () => {
   const totalAmount = getCartAmount() || 0;
   const finalTotal = totalAmount > 0 ? totalAmount + delivery_fee : 0;
 
+  // Format currency display
+  const formatCurrency = (amount) => `${currency} ${amount.toFixed(2)}`;
+
+  // Data for rendering rows to avoid repetition
+  const cartDetails = [
+    { label: "SUB TOTAL:", value: formatCurrency(totalAmount) },
+    {
+      label: "SHIPPING FEE:",
+      value: formatCurrency(totalAmount > 0 ? delivery_fee : 0),
+    },
+    { label: "TOTAL:", value: formatCurrency(finalTotal), isBold: true },
+  ];
+
   return (
     <div className="w-full">
-      <div className="text-2xl ">
-        <Title text1={"CART"} text2={"TOTALS"} />
+      {/* Title */}
+      <div className="text-2xl">
+        <Title text1="CART" text2="TOTALS" />
       </div>
+
+      {/* Cart Details */}
       <div className="flex flex-col gap-2 mt-2 text-sm pr-10">
-        <div className="flex justify-between">
-          <p className="font-semibold">SUB TOTAL:</p>
-          <p>
-            {currency} {totalAmount.toFixed(2)}
-          </p>
-        </div>
-        <hr />
-        <div className="flex justify-between">
-          <p className="font-semibold">SHIPPING FEE: </p>
-          <p>
-            {currency} {delivery_fee.toFixed(2)}
-          </p>
-        </div>
-        <hr />
-        <div className="flex justify-between">
-          <b>TOTAL: </b>
-          <b>
-            {currency} {finalTotal.toFixed(2)}
-          </b>
-        </div>
+        {cartDetails.map(({ label, value, isBold }, index) => (
+          <React.Fragment key={index}>
+            <div className="flex justify-between">
+              <p className={isBold ? "font-bold" : "font-semibold"}>{label}</p>
+              <p className={isBold ? "font-bold" : ""}>{value}</p>
+            </div>
+            {index < cartDetails.length - 1 && <hr />}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );

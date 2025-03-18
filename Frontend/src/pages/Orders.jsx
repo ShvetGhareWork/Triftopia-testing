@@ -7,39 +7,32 @@ import axios from "axios";
 
 const Orders = () => {
   const { backEndURL, token, currency } = useContext(ShopContext);
-
   const [orderData, setOrderData] = useState([]);
-  // Get the current date and time
-  const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleString(); // Format: "2/9/2025, 4:13:27 PM" or similar
 
   const LoadOrderData = async () => {
-    try {
-      if (!token) {
-        return null;
-      }
+    if (!token) return;
 
+    try {
       const response = await axios.post(
-        backEndURL + "/api/order/userorders",
+        `${backEndURL}/api/order/userorders`,
         {},
         { headers: { token } }
       );
+
       if (response.data.success) {
-        let AllOrderItems = [];
-        response.data.userOrders.map((order) => {
-          order.items.map((item) => {
-            item["status"] = order.status;
-            item["payment"] = order.payment;
-            item["payment_method"] = order.payment_method ?? "undefined";
-            item["date"] = order.date;
-            AllOrderItems.push(item);
-          });
-        });
-        console.log(AllOrderItems.reverse());
-        setOrderData(AllOrderItems.reverse());
+        const allOrderItems = response.data.userOrders.flatMap((order) =>
+          order.items.map((item) => ({
+            ...item,
+            status: order.status,
+            payment: order.payment,
+            payment_method: order.payment_method ?? "undefined",
+            date: order.date,
+          }))
+        );
+        setOrderData(allOrderItems.reverse());
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error loading orders:", error);
     }
   };
 
@@ -52,17 +45,25 @@ const Orders = () => {
       <Navbar />
       <div className="border-t ml-20 mr-20 pt-16">
         <div className="text-2xl">
-          <Title text1={"MY"} text2={"ORDERS"} />
+          <Title text1="MY" text2="ORDERS" />
         </div>
-        <div className="">
-          {orderData.map((item, index) => {
-            return (
+
+        <div>
+          {orderData.length === 0 ? (
+            <p className="text-center text-gray-500 mt-10">No orders found.</p>
+          ) : (
+            orderData.map((item, index) => (
               <div
                 key={index}
                 className="py-4 border-t border-b-0 text-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
+                {/* Order Details */}
                 <div className="flex items-start gap-6 text-sm">
-                  <img src={item.image} alt="" className="w-16 sm:w-20" />
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-16 sm:w-20"
+                  />
                   <div>
                     <p className="sm:text-base font-medium">{item.name}</p>
                     <div className="flex items-center gap-3 mt-1 text-base text-gray-700">
@@ -85,21 +86,23 @@ const Orders = () => {
                     </p>
                   </div>
                 </div>
-                <div className="md:w-1/2 flex justify-between">
+
+                {/* Order Status and Track Button */}
+                <div className="md:w-1/2 flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <p className="min-w-2 h-2 rounded-full bg-green-500"></p>
+                    <span className="min-w-2 h-2 rounded-full bg-green-500"></span>
                     <p className="text-sm md:text-base">{item.status}</p>
                   </div>
                   <button
                     onClick={LoadOrderData}
-                    className="border mr-5 px-4 py-2 text-sm font font-medium rounded-sm"
+                    className="border mr-5 px-4 py-2 text-sm font-medium rounded-sm"
                   >
                     Track Order
                   </button>
                 </div>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
       </div>
       <Footer />

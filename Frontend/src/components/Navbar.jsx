@@ -1,13 +1,13 @@
 import React, { useState, useContext } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import Search from "/Search.svg";
-import user from "/user.png";
-import Cart from "/shopping-cart.svg";
-import Logo from "/Logo.png";
-import Searchbar from "./Searchbar";
+import { Menu, X } from "lucide-react";
 import { ShopContext } from "../context/ShopContext";
 import { toast } from "react-toastify";
-import { Menu, X } from "lucide-react"; // Import icons for the mobile menu
+import Searchbar from "./Searchbar";
+import Search from "/Search.svg";
+import User from "/user.png";
+import Cart from "/shopping-cart.svg";
+import Logo from "/Logo.png";
 
 const Navbar = () => {
   const { SetShowSearch, GetcartCount, navigate, token, setToken, CartItems } =
@@ -22,6 +22,8 @@ const Navbar = () => {
     setToken("");
     CartItems({});
   };
+
+  const navRoutes = ["home", "limited-access", "antique-access", "contact"];
 
   return (
     <>
@@ -46,30 +48,28 @@ const Navbar = () => {
             menuOpen ? "block" : "hidden md:flex"
           }`}
         >
-          {["home", "limited-access", "antique-access", "contact"].map(
-            (route) => (
-              <NavLink
-                key={route}
-                to={`/${route}`}
-                className={({ isActive }) =>
-                  `flex flex-col items-center gap-1 transition-all ${
-                    isActive ? "font-semibold text-black" : "text-gray-700"
-                  }`
-                }
-                onClick={() => setMenuOpen(false)}
-              >
-                <p className="capitalize">{route.replace("-", " ")}</p>
-                <div
-                  className={`w-full h-[2px] mt-1 transition-all ${
-                    location.pathname === `/${route}` ||
-                    (route === "home" && location.pathname === "/")
-                      ? "bg-black"
-                      : "bg-transparent"
-                  }`}
-                />
-              </NavLink>
-            )
-          )}
+          {navRoutes.map((route) => (
+            <NavLink
+              key={route}
+              to={`/${route}`}
+              className={({ isActive }) =>
+                `flex flex-col items-center gap-1 transition-all ${
+                  isActive ? "font-semibold text-black" : "text-gray-700"
+                }`
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              <p className="capitalize">{route.replace("-", " ")}</p>
+              <div
+                className={`w-full h-[2px] mt-1 transition-all ${
+                  location.pathname === `/${route}` ||
+                  (route === "home" && location.pathname === "/")
+                    ? "bg-black"
+                    : "bg-transparent"
+                }`}
+              />
+            </NavLink>
+          ))}
         </ul>
 
         {/* Icons Section */}
@@ -83,28 +83,30 @@ const Navbar = () => {
           <div className="relative group">
             <img
               onClick={() => (token ? null : navigate("/login"))}
-              src={user}
+              src={User}
               className="w-5 cursor-pointer"
               alt="User"
             />
-
             {/* Dropdown */}
             {token && (
               <div className="hidden group-hover:block absolute right-0 bg-white text-gray-400 rounded-2xl shadow-lg py-3 px-4 w-40">
-                <p className="cursor-pointer hover:text-black p-2 rounded">
+                <p
+                  className="cursor-pointer hover:text-black p-2"
+                  onClick={() => navigate("/profile")}
+                >
                   My Profile
                 </p>
                 <hr className="border-gray-700" />
                 <p
-                  onClick={() => navigate("/orders")} //navigation
-                  className="cursor-pointer hover:text-black p-2 rounded"
+                  className="cursor-pointer hover:text-black p-2"
+                  onClick={() => navigate("/orders")}
                 >
                   Orders
                 </p>
                 <hr className="border-gray-700" />
                 <p
-                  onClick={() => Logout()}
-                  className="cursor-pointer hover:text-black p-2 rounded"
+                  className="cursor-pointer hover:text-black p-2"
+                  onClick={Logout}
                 >
                   Logout
                 </p>
