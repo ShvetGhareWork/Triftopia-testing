@@ -12,11 +12,14 @@ import AuthUser from "../middleware/Auth.js";
 
 const OrderRouter = express.Router();
 
-OrderRouter.post("/list", AdminAuth, AllOrders); // Admin: Fetch all orders
-OrderRouter.post("/status", AdminAuth, UpdateStatus); // Admin: Update order status
-OrderRouter.post("/place", AuthUser, PlaceOrder); // User: Place order (COD)
-OrderRouter.post("/razorpay", AuthUser, PlaceOrderRazorpay); // User: Place order (Razorpay)
-OrderRouter.post("/userorders", AuthUser, UserOrders); // User: Fetch own orders
-OrderRouter.post("/verifyrazorpay", AuthUser, verifyRazorpay); // User: verify the payement
+// Admin Routes
+OrderRouter.post("/list", AdminAuth, AllOrders); // Fetch all orders
+OrderRouter.post("/status", AdminAuth, UpdateStatus); // Update order status
+
+// User Routes
+OrderRouter.post("/place", AuthUser, PlaceOrder); // Place order (COD)
+OrderRouter.post("/razorpay", AuthUser, PlaceOrderRazorpay); // Place order (Razorpay)
+OrderRouter.post("/userorders", AuthUser, UserOrders); // Fetch user’s orders
+OrderRouter.post("/verifyrazorpay", AuthUser, verifyRazorpay); // Verify Razorpay payment
 
 export default OrderRouter;

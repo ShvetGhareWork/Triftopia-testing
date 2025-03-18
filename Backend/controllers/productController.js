@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import productModel from "../models/productModel.js";
-// Function to add product
+
+// Add product
 const addProduct = async (req, res) => {
   try {
     const {
@@ -19,26 +20,18 @@ const addProduct = async (req, res) => {
       rarityLevel,
       condition,
     } = req.body;
+    const image = req.file;
 
-    // For single file upload
-    const image = req.file; // The single uploaded image
-
-    if (!image) {
+    if (!image)
       return res
         .status(400)
         .json({ success: false, message: "No image uploaded" });
-    }
 
-    // Upload the image to Cloudinary
-    const uploadPromise = cloudinary.uploader.upload(image.path, {
-      resource_type: "image", // Specify the type of resource (image)
-    });
-
-    // Use Promise.all() to wait for the image upload
-    const cloudinaryResponse = await Promise.all([uploadPromise]);
-
-    // Get the uploaded image URL
-    const imageUrl = cloudinaryResponse[0].secure_url;
+    // Upload image to Cloudinary
+    const { secure_url: imageUrl } = await cloudinary.uploader.upload(
+      image.path,
+      { resource_type: "image" }
+    );
 
     const productData = {
       name,
@@ -46,8 +39,8 @@ const addProduct = async (req, res) => {
       price: Number(price),
       category,
       subCategory,
-      bestseller: bestseller === "true" ? true : false,
-      trusted: trusted === "true" ? true : false,
+      bestseller: bestseller === "true",
+      trusted: trusted === "true",
       date: Date.now(),
       originyear: Number(originyear),
       brand,
@@ -59,62 +52,60 @@ const addProduct = async (req, res) => {
       image: imageUrl,
     };
 
-    console.log(productData);
-
     const product = new productModel(productData);
-
     await product.save();
 
     res.json({
       success: true,
       message: "Product added successfully!",
-      imageUrl: imageUrl, // Send the image URL back in the response
+      imageUrl,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error adding product:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Function to list product
+// List all products
 const listProduct = async (req, res) => {
   try {
     const products = await productModel.find({});
-
-    if (!products.length) {
+    if (!products.length)
       return res
         .status(404)
         .json({ success: false, message: "No products found" });
-    }
-
     res.status(200).json({ success: true, products });
-    console.log(products);
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// Function to remove product
+// Remove product
 const removeProduct = async (req, res) => {
   try {
-    await productModel.findByIdAndDelete(req.body.id);
+    const { id } = req.body;
+    await productModel.findByIdAndDelete(id);
     res.json({ success: true, message: "Product Removed!" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Error removing product:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Function to single product Info
+// Get single product info
 const singleProductInfo = async (req, res) => {
   try {
     const { productId } = req.body;
     const product = await productModel.findById(productId);
+    if (!product)
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     res.json({ success: true, product });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Error fetching product info:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

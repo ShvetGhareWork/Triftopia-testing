@@ -1,139 +1,126 @@
 import userModel from "../models/userModel.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import validator from "validator";
 
-const AddtoCart = async (req, res) => {
+const SECRET_KEY = process.env.JWT_SECRET || "default_value";
+const createToken = (id) => jwt.sign({ id }, SECRET_KEY);
+const handleResponse = (res, success, message, extra = {}) =>
+  res.json({ success, message, ...extra });
+
+// User Login
+const loginUser = async (req, res) => {
   try {
-    const { userId, itemId, name, quantity, description, price, image } =
-      req.body;
+    const { email, password } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user) return handleResponse(res, false, "User doesn't exist");
 
-    const userData = await userModel.findById(userId);
-    let cartData = userData.cartData || {};
-    console.log(cartData);
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return handleResponse(res, false, "Incorrect credentials");
 
-    if (cartData[itemId]) {
-      // Update existing item with all provided details
-      cartData[itemId] = {
-        ...cartData[itemId], // Retain existing properties
-        name,
-        description,
-        price,
-        image,
-        quantity: cartData[itemId].quantity + quantity,
-      };
-      console.log("Image URL received:", image);
+    const token = createToken(user._id);
+    handleResponse(res, true, "Login successful", { token, userId: user._id });
+  } catch (error) {
+    console.error(error);
+    handleResponse(res, false, error.message);
+  }
+};
+
+// User Registration
+const registerUser = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (await userModel.findOne({ email })) {
+      return handleResponse(res, false, "User already exists");
+    }
+
+    if (!validator.isEmail(email)) {
+      return handleResponse(res, false, "Please enter a valid Email");
+    }
+
+    if (password.length < 8) {
+      return handleResponse(res, false, "Please enter a strong password");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 7);
+    const user = await new userModel({
+      name,
+      email,
+      password: hashedPassword,
+    }).save();
+    const token = createToken(user._id);
+
+    handleResponse(res, true, "User registered successfully", { token });
+  } catch (error) {
+    console.error(error);
+    handleResponse(res, false, error.message);
+  }
+};
+
+// Admin Login
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
+      const token = jwt.sign(email + password, SECRET_KEY);
+      handleResponse(res, true, "Admin login successful", { token });
     } else {
-      // Add new item with full product data
-      cartData[itemId] = {
-        name,
-        description,
-        price,
-        image,
-        quantity,
-      };
+      handleResponse(res, false, "Invalid credentials");
+    }
+  } catch (error) {
+    console.error(error);
+    handleResponse(res, false, error.message);
+  }
+};
+
+// Cart Management
+const manageCart = async (req, res, action) => {
+  try {
+    const { userId, itemId, quantity, ...itemDetails } = req.body;
+    const userData = await userModel.findById(userId);
+    if (!userData) return handleResponse(res, false, "User not found");
+
+    let cartData = userData.cartData || {};
+
+    switch (action) {
+      case "add":
+        if (cartData[itemId]) {
+          cartData[itemId] = {
+            ...cartData[itemId],
+            ...itemDetails,
+            quantity: cartData[itemId].quantity + quantity,
+          };
+        } else {
+          cartData[itemId] = { ...itemDetails, quantity };
+        }
+        break;
+
+      case "update":
+        if (cartData[itemId]) {
+          cartData[itemId].quantity = quantity;
+        } else {
+          cartData[itemId] = { quantity };
+        }
+        break;
+
+      case "remove":
+        if (cartData[itemId]) delete cartData[itemId];
+        else return handleResponse(res, false, "Item not found in cart");
+        break;
+
+      case "fetch":
+        return handleResponse(res, true, "Cart fetched", { cartData });
     }
 
     await userModel.findByIdAndUpdate(userId, { cartData });
-
-    res.json({ success: true, message: "Added to cart", cartData });
+    handleResponse(res, true, "Cart updated", { cartData });
   } catch (error) {
-    res.json({ success: false, message: error.message });
-    console.log(error);
+    console.error(error);
+    handleResponse(res, false, error.message);
   }
 };
 
-const UpdatetoCart = async (req, res) => {
-  try {
-    const { userId, itemId, quantity } = req.body;
-    const userData = await userModel.findById(userId);
-    let cartData = userData.cartData || {};
-
-    // Update only the quantity of the existing item
-    if (cartData[itemId]) {
-      cartData[itemId] = {
-        ...cartData[itemId],
-        quantity: quantity,
-      };
-    } else {
-      // Initialize with only quantity if item doesn't exist
-      cartData[itemId] = { quantity };
-    }
-
-    await userModel.findByIdAndUpdate(userId, { cartData });
-    res.json({ success: true, message: "Cart Updated" });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
-    console.log(error);
-  }
-};
-
-// const getUserCart = async (req, res) => {
-//   try {
-//     const { userId } = req.body;
-//     const userData = await userModel.findById(userId);
-//     let cartData = await userData.cartData;
-
-//     res.json({ success: true, cartData });
-//   } catch (error) {
-//     res.json({ success: false, message: error.message });
-//     console.log(error);
-//   }
-// };
-
-const getUserCart = async (req, res) => {
-  try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.json({ success: false, message: "User ID is required" });
-    }
-
-    // Fetch user data from the database
-    const userData = await userModel.findById(userId);
-
-    if (!userData) {
-      return res.json({ success: false, message: "User not found" });
-    }
-
-    // Safely access cartData, ensuring it's an object
-    const cartData = userData.cartData || {};
-
-    console.log("Fetched cartData:", cartData); // Debugging line
-
-    res.json({ success: true, cartData });
-  } catch (error) {
-    console.error("Error in getUserCart:", error);
-    res.json({ success: false, message: error.message });
-  }
-};
-
-const removeFromCart = async (req, res) => {
-  try {
-    const { userId, itemId } = req.body;
-
-    // Fetch the user data from the database
-    const userData = await userModel.findById(userId);
-
-    if (!userData) {
-      return res.json({ success: false, message: "User not found" });
-    }
-
-    // Get the cart data from the user document
-    let cartData = userData.cartData || {};
-
-    if (cartData[itemId]) {
-      // Remove the item from the cart data
-      delete cartData[itemId];
-
-      // Update the user document with the modified cart data
-      await userModel.findByIdAndUpdate(userId, { cartData });
-
-      return res.json({ success: true, message: "Item removed from cart" });
-    } else {
-      return res.json({ success: false, message: "Item not found in cart" });
-    }
-  } catch (error) {
-    console.error("Error in removeFromCart:", error);
-    res.json({ success: false, message: "Failed to remove item from cart" });
-  }
-};
-
-export { AddtoCart, UpdatetoCart, getUserCart, removeFromCart };
+export { loginUser, registerUser, adminLogin, manageCart };

@@ -1,10 +1,22 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useMemo } from "react";
 import { ShopContext } from "./ShopContext";
 
-const { products } = useContext(ShopContext);
+const AntiqueEdition = () => {
+  const { products } = useContext(ShopContext);
 
-const [AntiqueEdition, SetAntiqueEdition] = useState([]);
+  // Optimize with useMemo to avoid unnecessary re-renders
+  const antiqueEditionItems = useMemo(
+    () => products.filter((item) => item.category === "Antique"),
+    [products]
+  );
 
-useEffect(() => {
-  SetAntiqueEdition(products.filter((item) => item.category === "Antique"));
-}, [products]);
+  return (
+    <div>
+      {antiqueEditionItems.map((item) => (
+        <div key={item._id}>{item.name}</div>
+      ))}
+    </div>
+  );
+};
+
+export default AntiqueEdition;

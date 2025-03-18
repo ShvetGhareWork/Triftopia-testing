@@ -1,12 +1,22 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useMemo } from "react";
 import { ShopContext } from "./ShopContext";
 
-const { products } = useContext(ShopContext);
+const LimitedEdition = () => {
+  const { products } = useContext(ShopContext);
 
-const [LimitedEdition, SetLimitedEdition] = useState([]);
-
-useEffect(() => {
-  SetLimitedEdition(
-    products.filter((item) => item.category === "Limited-Edition")
+  // Optimize with useMemo to avoid unnecessary re-renders
+  const limitedEditionItems = useMemo(
+    () => products.filter((item) => item.category === "Limited-Edition"),
+    [products]
   );
-}, [products]);
+
+  return (
+    <div>
+      {limitedEditionItems.map((item) => (
+        <div key={item._id}>{item.name}</div>
+      ))}
+    </div>
+  );
+};
+
+export default LimitedEdition;
