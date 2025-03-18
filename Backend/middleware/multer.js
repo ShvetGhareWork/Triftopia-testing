@@ -1,40 +1,25 @@
 import multer from "multer";
 import path from "path";
 
-// Storage middleware
-const storage = multer.diskStorage({
-  // Destination for storing uploaded files
-  destination: function (req, file, callback) {
-    // Store files in 'uploads/' directory
-    callback(null, "uploads/");
-  },
-
-  // Generate file name (with timestamp to avoid collisions)
-  filename: function (req, file, callback) {
-    const uniqueSuffix = Date.now() + path.extname(file.originalname); // Add timestamp to the filename
-    callback(null, file.fieldname + "-" + uniqueSuffix); // Example: 'image-1618913023891.jpg'
-  },
-});
-
-// File filter to accept only image files (JPEG, PNG, GIF)
-const fileFilter = (req, file, callback) => {
-  const filetypes = /jpg|jpeg|png|gif/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return callback(null, true);
-  } else {
-    return callback("Error: Only images are allowed!");
-  }
-};
-
-// Upload middleware
+// Multer configuration
 const upload = multer({
-  storage: storage, // Set the storage configuration
-  fileFilter: fileFilter, // Apply the file filter
-  limits: { fileSize: 5 * 1024 * 1024 }, // Optional: set file size limit (5 MB in this case)
+  storage: multer.diskStorage({
+    destination: "uploads/", // Store files in 'uploads/' directory
+    filename: (req, file, callback) => {
+      const uniqueSuffix = `${Date.now()}${path.extname(file.originalname)}`;
+      callback(null, `${file.fieldname}-${uniqueSuffix}`); // Example: 'image-1618913023891.jpg'
+    },
+  }),
+  fileFilter: (req, file, callback) => {
+    const filetypes = /jpg|jpeg|png|gif/;
+    const isValidType =
+      filetypes.test(path.extname(file.originalname).toLowerCase()) &&
+      filetypes.test(file.mimetype);
+    isValidType
+      ? callback(null, true)
+      : callback(new Error("Only images are allowed!"));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB file size limit
 });
 
-// Export the upload middleware
 export default upload;
